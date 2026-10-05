@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-const API = import.meta.env.VITE_API_BASE || "http://localhost:8000";
+const API = import.meta.env.VITE_API_BASE || "https://saveclip-backend.onrender.com";
 const PLAT = [["youtube|youtu\\.be", "YouTube", "#ef4444"], ["facebook|fb\\.watch", "Facebook", "#2563eb"], ["instagram", "Instagram", "#ec4899"], ["tiktok", "TikTok", "#22d3ee"], ["pinterest|pin\\.it", "Pinterest", "#dc2626"], ["twitter|x\\.com", "X", "#94a3b8"]];
 const SHORTCUTS = [["/", "Focus the link box"], ["Ctrl K", "Focus the link box"], ["Enter", "Search"], ["Esc", "Clear / close"], ["↓ ↑", "Move between qualities"], ["Enter", "Download selected"], ["V", "Video tab"], ["A", "Audio tab"], ["T", "Toggle theme"], ["?", "Show shortcuts"]];
 const dur = s => (s ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` : "");
@@ -22,7 +22,7 @@ export default function App() {
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
-    try { localStorage.setItem("theme", theme); } catch {}
+    try { localStorage.setItem("theme", theme); } catch { }
   }, [theme]);
 
   const plat = PLAT.find(([r]) => new RegExp(r, "i").test(url));
@@ -40,7 +40,7 @@ export default function App() {
       if (!r.ok) throw new Error(d.detail || "Video not found.");
       setData({ ...d, src: u }); setTab("video");
       const h = [{ u, t: d.title }, ...loadHist().filter(x => x.u !== u)].slice(0, 5);
-      try { localStorage.setItem("h", JSON.stringify(h)); } catch {}
+      try { localStorage.setItem("h", JSON.stringify(h)); } catch { }
       setHist(h);
     } catch (e) {
       setErr(e.message === "Failed to fetch" ? "Can't reach the server. Check that the backend is running." : e.message);
@@ -187,9 +187,9 @@ export default function App() {
           <h2 className="text-3xl font-extrabold text-center tracking-tight mb-9">Built to be fast</h2>
           <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
             {[["⚡", "Instant streaming", "Downloads begin immediately. No waiting for the server to process the whole file."],
-              ["🎞️", "Every quality", "Pick any available resolution, or grab audio only as MP3."],
-              ["⌨️", "Keyboard first", "Search, switch tabs and download without touching the mouse. Press ? to see all shortcuts."],
-              ["🔒", "Private by design", "No accounts and no tracking. Recent links stay in your own browser."]].map(([i, t, d]) => (
+            ["🎞️", "Every quality", "Pick any available resolution, or grab audio only as MP3."],
+            ["⌨️", "Keyboard first", "Search, switch tabs and download without touching the mouse. Press ? to see all shortcuts."],
+            ["🔒", "Private by design", "No accounts and no tracking. Recent links stay in your own browser."]].map(([i, t, d]) => (
               <div key={t} className="glass p-6 rounded-[20px] transition hover:-translate-y-1 hover:border-[var(--a)]"><span className="text-2xl">{i}</span>
                 <h4 className="font-semibold mt-3 mb-1.5">{t}</h4><p className="text-sm leading-relaxed mt">{d}</p></div>
             ))}
@@ -199,8 +199,8 @@ export default function App() {
         <section className="pb-14 max-w-[740px] mx-auto">
           <h2 className="text-3xl font-extrabold text-center tracking-tight mb-9">FAQ</h2>
           {[["Which videos can I download?", "Public videos from supported platforms. Private, login-only or DRM-protected videos may not work."],
-            ["Is it legal?", "Only download content you own or have permission to use. Respecting copyright and platform terms is your responsibility."],
-            ["Why is my video unavailable?", "It may be private, or the platform may have blocked the request. Try again later or with another link."]].map(([q, a]) => (
+          ["Is it legal?", "Only download content you own or have permission to use. Respecting copyright and platform terms is your responsibility."],
+          ["Why is my video unavailable?", "It may be private, or the platform may have blocked the request. Try again later or with another link."]].map(([q, a]) => (
             <details key={q} className="glass rounded-2xl px-5 py-4 mb-2.5"><summary className="font-semibold cursor-pointer">{q}</summary>
               <p className="mt-2.5 text-sm leading-relaxed mt">{a}</p></details>
           ))}
