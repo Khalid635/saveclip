@@ -6,11 +6,26 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 
-ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")   # অনলাইনে নিজের ডোমেইন দিন
+# Production origins: the Vercel frontend plus the local Vite dev servers.
+# Override with ALLOWED_ORIGINS (comma-separated) for other deployments.
+# The default is deliberately NOT "*": any website could otherwise call
+# the API from a visitor's browser.
+_DEFAULT_ORIGINS = [
+    "https://saveclip-green.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+_env_origins = os.getenv("ALLOWED_ORIGINS")
+ORIGINS = (
+    [o.strip() for o in _env_origins.split(",") if o.strip()]
+    if _env_origins
+    else _DEFAULT_ORIGINS
+)
 MAX_SECONDS = int(os.getenv("MAX_SECONDS", 3 * 3600))    # এর চেয়ে লম্বা ভিডিও বাদ
 RATE, WINDOW = int(os.getenv("RATE", 30)), 60            # প্রতি IP প্রতি মিনিটে
 SLOTS = threading.BoundedSemaphore(int(os.getenv("MAX_STREAMS", 3)))  # একসাথে সর্বোচ্চ ডাউনলোড
 TTL = 600
+CACHE_MAX_ENTRIES = int(os.getenv("CACHE_MAX_ENTRIES", 256))
 
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=ORIGINS, allow_methods=["GET"],
@@ -67,6 +82,10 @@ def get_raw(url):
     if (d.get("duration") or 0) > MAX_SECONDS:
         raise HTTPException(400, "ভিডিওটি অনেক লম্বা")
     with lock:
+        # Bound the cache so it can't grow without limit: drop the oldest
+        # entries first (dicts keep insertion order).
+        while len(cache) >= CACHE_MAX_ENTRIES:
+            cache.pop(next(iter(cache)))
         cache[url] = (now + TTL, d)
     return d
 
